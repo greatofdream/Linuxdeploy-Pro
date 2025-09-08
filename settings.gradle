@@ -1,1 +1,7 @@
 include ':app'
+
+if (version == '2.5.1') {
+    project(':app').buildFileName = 'build_2.5.1.gradle'
+} else {
+    project(':app').buildFileName = 'build.gradle'
+}
