@@ -1,0 +1,70 @@
+name: Android CI
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+     inputs:
+      jdk:
+        description: "Select JDK version."
+        required: false
+        default: "11"
+        type: choice
+        options:
+          - "8"
+          - "11"
+      tag:
+        description: "Select tags."
+        required: false
+        default: '3.0.0'
+        type: choice
+        options:
+          - '2.5.1'
+          - '3.0.0'
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      jdk-version: ${{ inputs.jdk || '11' }}
+      tag: ${{ inputs.tag || '3.0.0' }}
+
+    steps:
+    - run: echo ${{ env.jdk-version }}
+    - name: Checkout the branch
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+    - name: set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ env.jdk-version }}
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Build with Gradle
+      uses: burrunan/gradle-cache-action@v1
+      with:
+        job-id: jdk-build
+        arguments: build -Pversion=${{ env.tag }}
+
+    - name: Upload app-debug.apk artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: LinuxDeploy_debug_jdk${{ env.jdk-version }}.apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Upload APK to Release
+      uses: ncipollo/release-action@main
+      with:
+        tag: ${{ env.tag }}
+        artifacts: app/build/outputs/apk/debug/app-debug.apk
+        allowUpdates: true
+        removeArtifacts: false
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        body: |
+          ### APK Information
+          - JDK version: ${{ env.jdk-version }}
+          - Release tag: ${{ env.tag }}
+          - SDK min-target: 
