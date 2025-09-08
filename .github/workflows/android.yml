@@ -31,17 +31,10 @@ jobs:
 
     steps:
     - run: echo ${{ env.jdk-version }}
-    - name: Checkout the branch for android4
+    - name: Checkout the branch
       uses: actions/checkout@v3
-      if: ${{ env.tag }} > '2.5.1' 
       with:
         submodules: 'true'
-    - name: Checkout the branch for android4
-      uses: actions/checkout@v3
-      if: ${{ env.tag }} == '2.5.1' 
-      with:
-        submodules: 'true'
-        ref: android_4
     - name: set up JDK
       uses: actions/setup-java@v3
       with:
