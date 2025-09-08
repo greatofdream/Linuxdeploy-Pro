@@ -5,37 +5,49 @@ on:
     branches: [dev]
   repository_dispatch:
   workflow_dispatch:
-
+     inputs:
+      jdk:
+        description: "Select JDK version."
+        required: false
+        default: "11"
+        type: choice
+        options:
+          - "8"
+          - "11"
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
+    env:
+      jdk-version: ${{ inputs.jdk || '11' }}
+
     steps:
+    - run: echo ${{ env.jdk-version }}
     - uses: actions/checkout@v3
       with:
         submodules: 'true'
-    - name: set up JDK 11
+    - name: set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: ${{ env.jdk-version }}
         distribution: 'temurin'
         cache: gradle
 
     - name: Build with Gradle
       uses: burrunan/gradle-cache-action@v1
       with:
-        job-id: jdk11
+        job-id: jdk-build
         arguments: --build-cache build
 
     - name: Upload app-debug.apk artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug.apk
+        name: LinuxDeploy_debug_jdk${{ env.jdk-version }}.apk
         path: app/build/outputs/apk/debug/app-debug.apk
 
     - name: Upload app-release.apk artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: app-release.apk
+        name: LinuxDeploy_release_jdk${{ inputs.jdk }}.apk
         path: app/build/outputs/apk/release/app-release.apk
